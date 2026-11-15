@@ -106,14 +106,22 @@ def get_config() -> tuple[int, int, int, int, int]:
     - Remember to maintain the same order of the returned elements.
     """
 
-    # TODO: put your code!!!!
-    if(input("Do you want to modify the parameters?: ") == "yes"):
-        print("Sure")
-
-    # This line of code has been left for letting the full program work
-    # It corresponds to the user answering NO to changing any default values 
-    # You will need to eliminate it when adding your code
-    return PADDLE_H, SPEED_PADDLE, SPEED_BALL_X, SPEED_BALL_Y, BALL_RADIUS 
+    # 1. Ask the user if they want to modify default game parameters
+    if ask_yes_no("Do you want to modify the game parameters?"):
+        print("\n--- Game Configuration ---")
+        
+        # 2. Read each parameter using the read_int_in_range() helper function
+        paddle_height = read_int_in_range("Enter paddle height", 60, 160)
+        paddle_speed = read_int_in_range("Enter paddle speed", 1, 20)
+        ball_x_speed = read_int_in_range("Enter ball X speed", 1, 20)
+        ball_y_speed = read_int_in_range("Enter ball Y speed", 1, 20)
+        ball_radius = read_int_in_range("Enter ball radius", 5, 30)
+        
+        # 3. Return the selected values in the exact required order
+        return paddle_height, paddle_speed, ball_x_speed, ball_y_speed, ball_radius
+    else:
+        # 4. If the user answers 'no', return the default constants
+        return PADDLE_H, SPEED_PADDLE, SPEED_BALL_X, SPEED_BALL_Y, BALL_RADIUS
 
 def change_colors() -> tuple[tuple[int, int, int], tuple[int, int, int]]:
     """ Ask the user if they want to modify the game colors (background and foreground).
@@ -146,11 +154,15 @@ def change_colors() -> tuple[tuple[int, int, int], tuple[int, int, int]]:
     - Keep the order of returned values consistent: first background, then foreground.
     """
 
-    # TODO: put your code!!!!
-
-    # This line of code has been left for letting the full program work
-    # You will need to eliminate it when adding your code
-    return BLACK, WHITE
+    # 1. Ask the user if they want to change colors
+    if ask_yes_no("Do you want to change game colors?"):
+        # 2. Read new RGB values for background and foreground
+        bg_color = read_color("background")
+        fg_color = read_color("foreground")
+        return bg_color, fg_color
+    else:
+        # 3. Return default colors if user answers 'no'
+        return BLACK, WHITE
 
 def read_color(prompt: str) -> tuple[int, int, int]:
     """Ask the user to enter the three RGB components of a color with each component in [0,255].
@@ -181,8 +193,11 @@ def read_color(prompt: str) -> tuple[int, int, int]:
     - Keep the order (Red, then Green, then Blue).
     """ 
 
-    # TODO: put your code!!!!
-    # return r, g, b
+    print(f"\nConfiguring {prompt} color:")
+    r = read_int_in_range("Enter Red component", 0, 255)
+    g = read_int_in_range("Enter Green component", 0, 255)
+    b = read_int_in_range("Enter Blue component", 0, 255)
+    return r, g, b
 
 def read_int_in_range(prompt: str, low: int, high: int) -> int:
     """Ask user for an integer within [low, high]. 
@@ -204,8 +219,21 @@ def read_int_in_range(prompt: str, low: int, high: int) -> int:
     -------
     An integer value such that low <= value <= high.
     """
-    
-    # TODO: put your code!!!!
+    while True:
+        user_input = input(f"{prompt} ({low}-{high}): ").strip()
+
+        # int() can fail if the user types letters, decimals, or nothing.
+        try:
+            value = int(user_input)
+        except ValueError:
+            print("Please enter a whole number (for example, 10).")
+            continue
+
+        # A whole number can still be outside the allowed range.
+        if low <= value <= high:
+            return value
+
+        print(f"The number must be between {low} and {high}.")
 
 def read_int_in_range_w_default(prompt: str, low: int, high: int, default_val: int) -> int:
     """ Advanced/alternate more user-friendly version of read_int_in_range().
@@ -241,7 +269,24 @@ def read_int_in_range_w_default(prompt: str, low: int, high: int, default_val: i
         The integer entered by the user, or `default_val` if the user pressed ENTER.
     """
     
-    # TODO: put your code!!!!
+    while True:
+        user_input = input(f"{prompt} ({low}-{high}) [default: {default_val}]: ").strip()
+
+        # An empty answer means: use the default value.
+        if user_input == "":
+            return default_val
+
+        try:
+            value = int(user_input)
+        except ValueError:
+            print("Please enter a whole number, or press ENTER for the default.")
+            continue
+
+        if low <= value <= high:
+            return value
+
+        print(f"The number must be between {low} and {high}.")
+
 
 
 def ask_yes_no(prompt: str) -> bool:
@@ -271,7 +316,16 @@ def ask_yes_no(prompt: str) -> bool:
     - Print a short message (e.g. "Please answer y/n.") when the answer is invalid.
     - Return only after receiving a valid input; do not stop the program with errors.
     """
-    # TODO: put your code!!!!
+
+    while True:
+        answer = input(prompt + " (y/n): ").strip().lower()
+
+        if answer == "y" or answer == "yes":
+            return True
+        elif answer == "n" or answer == "no":
+            return False
+        else:
+            print("Please answer y/n.")
 
 # ================================
 # Functions to complete: main game
@@ -339,12 +393,17 @@ def collide_ball_walls(x: int, y: int, vx: int, vy: int, radius: int, width: int
         When hitting a horizontal wall, change the sign of vy
         For precisely detecting collisions, you might need to consider the ball radius
     """
-    # TODO: put your code!!!!
 
-    if y == 0 or y == 600: #The if defines the collision of the borders, so when the ball hits the lower or higher border, it bounces.
-        vy = vy * (-1)
-    # This line of code has been left for letting the full program work
-    # You will need to eliminate it when adding your code
+    # Top wall bounce (top edge of the ball reaches y = 0)
+    if y - radius <= 0:
+        vy = -vy
+        y = radius  # Reposition ball inside top boundary
+        
+    # Bottom wall bounce (bottom edge of the ball reaches y = height)
+    elif y + radius >= height:
+        vy = -vy
+        y = height - radius  # Reposition ball inside bottom boundary
+
     return x, y, vx, vy
 
 
@@ -397,28 +456,28 @@ def collide_ball_paddle(x: int, y: int, vx: int, vy: int, paddle_x: int, paddle_
     - The collision box ignores the ball's circular shape for simplicity,
       which is sufficient for this game.
     """
-    # TODO: put your code!!!!
-    hit = False
-    left   = x - radius
-    right  = x + radius
-    top    = y - radius
+
+    # 1. Calculate ball bounding box edges
+    left = x - radius
+    right = x + radius
+    top = y - radius
     bottom = y + radius
 
-    W = paddle_w
-    H = paddle_h
-    w = 2*radius
-    h = 2*radius
-    if (paddle_x < left + w and left < paddle_x + W):
-        hit = True
-    if (paddle_x < right + w and right < paddle_x + W):
-            hit = True
-    #if (paddle_y < y + h and y <paddle_y + H):#
-        #hit = True
-    if hit == True:
-        vx = vx * (-1)
+    # 2. Calculate paddle bounding box edges
+    paddle_right = paddle_x + paddle_w
+    paddle_bottom = paddle_y + paddle_h
 
-    # This line of code has been left for letting the full program work
-    # You will need to eliminate it when adding your code
+    # 3. Collision happens ONLY if BOTH horizontal AND vertical overlaps are True
+    hit = (left < paddle_right and right > paddle_x and top < paddle_bottom and bottom > paddle_y)
+
+    # 4. Handling bounce and repositioning
+    if hit:
+        vx = -vx
+        if vx > 0:
+            x = paddle_right + radius  # Left paddle bounce: push right
+        else:
+            x = paddle_x - radius      # Right paddle bounce: push left
+
     return x, y, vx, vy, hit
 
 def reset_ball(center_x: int, center_y: int, vx0: int, vy0: int, to_right: bool) -> tuple[int, int, int, int]:
@@ -455,11 +514,23 @@ def reset_ball(center_x: int, center_y: int, vx0: int, vy0: int, to_right: bool)
     - Optionally, randomize the vertical velocity slightly (e.g., sign or magnitude) for variability.
     """
 
-    # TODO: put your code!!!!
+    # Reset position to the center
+    x = center_x
+    y = center_y
 
-    # This line of code has been left for letting the full program work
-    # You will need to eliminate/modify it when adding your code
-    return center_x, center_y, vx0, vy0
+    # Set horizontal direction
+    if to_right:
+        vx = abs(vx0)
+    else:
+        vx = -abs(vx0)
+
+    # 3. Randomize vertical direction 
+    if random.randint(0, 1) == 0:
+        vy = abs(vy0)
+    else:
+        vy = -abs(vy0)
+
+    return x, y, vx, vy
 
 
 
@@ -492,11 +563,20 @@ def compute_ai_direction(ball_y: int, paddle_y: int, paddle_h: int) -> int:
     You might want to use a small tolerance margin so the paddle doesn't “vibrate” 
     when the ball is aligned enough.
     """
-    # TODO: put your code!!!!
 
-    # This line of code has been left for letting the full program work
-    # You will need to eliminate it when adding your code
-    return 0
+    # 1. Calculate the vertical center of the paddle
+    paddle_center = paddle_y + (paddle_h // 2)
+    
+    # 2. Define a tolerance margin to avoid constant jittering
+    tolerance = 10
+    
+    # 3. Compare ball position to paddle center
+    if ball_y < paddle_center - tolerance:
+        return -1  # Ball is above the paddle center -> move UP
+    elif ball_y > paddle_center + tolerance:
+        return 1   # Ball is below the paddle center -> move DOWN
+    else:
+        return 0   # Ball is aligned enough -> STAY IN THE SAME PLACE
 
 # =============================================
 # Checking KEYS UP/DOWN (given to the students)
