@@ -67,7 +67,7 @@ KEY_UP_RIGHT = pygame.K_UP          # arrow UP
 KEY_DOWN_RIGHT = pygame.K_DOWN      # arrow DOWN
 
 # Play against machine (optional feature): set to True once compute_ai_direction() is implemented
-PLAY_AGAINST_MACHINE = False
+PLAY_AGAINST_MACHINE = True
 
 # ==============================================================================
 # Functions to complete by the students : configuration/setup before game starts
@@ -644,6 +644,8 @@ def main() -> None:
     paddle_h, paddle_speed, speed_ball_x, speed_ball_y, ball_radius = get_config()
     backg_col, foreg_col = change_colors()
 
+    play_against_machine = ask_yes_no("Do you want to play against the computer?")
+
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Lab 2 - Pong")
@@ -672,7 +674,7 @@ def main() -> None:
         direction_left = read_player_direction(keys, KEY_UP_LEFT, KEY_DOWN_LEFT)
 
         # Right paddle can be human or AI
-        if PLAY_AGAINST_MACHINE:
+        if play_against_machine:
             direction_right = compute_ai_direction(ball_y, p2_y, paddle_h)
         else:
             direction_right = read_player_direction(keys, KEY_UP_RIGHT, KEY_DOWN_RIGHT)
